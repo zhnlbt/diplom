@@ -19,4 +19,12 @@ model User {
   name  String
 }
 
-model NotUser 
+model Jobs {
+  id  Int
+  name  String
+
+}
+
+model {
+  id Int
+}
