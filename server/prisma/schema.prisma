@@ -14,17 +14,195 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Change to "mysql" or "sqlite" if needed
+  url      = env("DATABASE_URL")
+}
+
+// Enums for better type safety
+enum UserType {
+  CANDIDATE
+  EMPLOYER
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  REJECTED
+  HIRED
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
+enum NotificationType {
+  APPLICATION_UPDATE
+  JOB_DESCRIPTION
+}
+
 model User {
-  id    Int     @id @default(autoincrement())
-  name  String
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  passwordHash    String
+  firstName       String?
+  lastName        String?
+  phone           String?
+  userType        UserType
+  isEmailVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  employer      Employer?
+  candidate     Candidate?
+  notifications Notification[]
+  
+  @@map("users")
 }
 
-model Jobs {
-  id  Int
-  name  String
-
+model Employer {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique
+  companyName      String
+  companyLogo      String?
+  companyDescription String? @db.Text
+  industry         String?
+  companySize      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs Job[]
+  
+  @@map("employers")
 }
 
-model {
-  id Int
+model Candidate {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique
+  profilePhoto     String?
+  bio              String?  @db.Text
+  location         String?
+  resumeUrl        String?
+  skills           String?  @db.Text
+  salaryExpectation Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relationships
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+  jobAlerts    JobAlert[]
+  favoriteJobs FavoriteJob[]
+  
+  @@map("candidates")
+}
+
+model Job {
+  id             Int       @id @default(autoincrement())
+  employerId     Int
+  title          String
+  description    String    @db.Text
+  location       String?
+  employmentType String?   // "full-time", "part-time", "contract", etc.
+  salaryMin      Decimal?
+  salaryMax      Decimal?
+  postedDate     DateTime  @default(now())
+  status         JobStatus @default(ACTIVE)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // Relationships
+  employer     Employer      @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  applications Application[]
+  jobAlerts    JobAlert[]
+  favoriteJobs FavoriteJob[]
+  
+  @@index([status])
+  @@index([postedDate])
+  @@index([employerId])
+  @@map("jobs")
+}
+
+model Application {
+  id             Int               @id @default(autoincrement())
+  jobId          Int
+  candidateId    Int
+  coverLetter    String?           @db.Text
+  status         ApplicationStatus @default(PENDING)
+  appliedAt      DateTime          @default(now())
+  employerNotes  String?           @db.Text
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  // Relationships
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  // Prevent duplicate applications
+  @@unique([candidateId, jobId])
+  @@index([status])
+  @@index([appliedAt])
+  @@map("applications")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String           @db.Text
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
+
+model JobAlert {
+  id          Int     @id @default(autoincrement())
+  candidateId Int
+  keywords    String?
+  location    String?
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job?      @relation(fields: [jobId], references: [id])
+  jobId     Int?
+  
+  @@index([candidateId])
+  @@map("job_alerts")
+}
+
+model FavoriteJob {
+  id          Int      @id @default(autoincrement())
+  candidateId Int
+  jobId       Int
+  favoritedAt DateTime @default(now())
+  
+  // Relationships
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  // Prevent duplicate favorites
+  @@unique([candidateId, jobId])
+  @@map("favorite_jobs")
 }

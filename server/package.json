@@ -1,27 +1,51 @@
+
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Job board backend API with user authentication and job management",
+  "main": "server/index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1", 
-    "start": "node server.js"
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "build": "npm run db:generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma migrate reset",
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "job-board",
+    "api",
+    "express",
+    "prisma",
+    "authentication",
+    "nodejs"
+  ],
+  "author": "Zhanel",
   "dependencies": {
-    "@prisma/client": "^6.13.0",
-    "bcryptjs": "^3.0.2",
+    "@prisma/client": "^5.7.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.0.1",
-    "helmet": "^8.1.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.17.1"
+    "multer": "^1.4.5-lts.1",
+    "prisma": "^5.7.0"
   },
   "devDependencies": {
-    "prisma": "^6.13.0"
+    "nodemon": "^3.0.2",
+    "eslint": "^8.55.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
