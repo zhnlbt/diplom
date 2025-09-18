@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Job board backend API with user authentication and job management",
   "main": "server/index.js",
-  "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server.js",
