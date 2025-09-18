@@ -1,4 +1,26 @@
 // server/index.js
+const fs = require('fs');
+const path = require('path');
+
+// Debug: List files in current directory
+console.log('Current directory:', __dirname);
+console.log('Files in server directory:');
+fs.readdirSync(__dirname).forEach(file => {
+    console.log('  -', file);
+});
+
+// Debug: Check if routes directory exists
+const routesPath = path.join(__dirname, '../routes');
+console.log('Routes path exists:', fs.existsSync(routesPath));
+if (fs.existsSync(routesPath)) {
+    console.log('Files in routes directory:');
+    fs.readdirSync(routesPath).forEach(file => {
+        console.log('  -', file);
+    });
+}
+
+
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
