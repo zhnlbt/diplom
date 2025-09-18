@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CANDIDATE
+  EMPLOYER
+  ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  INTERVIEW
+  REJECTED
+  ACCEPTED
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  password        String
+  firstName       String
+  lastName        String
+  phone           String?
+  role            UserRole  @default(CANDIDATE)
+  profilePicture  String?
+  bio             String?
+  resume          String?
+  company         String?
+  companyWebsite  String?
+  location        String?
+  skills          String[]
+  experience      Int?      // Years of experience
+  isActive        Boolean   @default(true)
+  emailVerified   Boolean   @default(false)
+  refreshToken    String?
+  lastLogin       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  jobs         Job[]         // Jobs posted by employer
+  applications Application[] // Applications made by candidate
+  savedJobs    SavedJob[]
+}
+
+model Job {
+  id                  Int       @id @default(autoincrement())
+  title               String
+  description         String
+  company             String
+  location            String
+  salary              String?
+  salaryMin           Int?
+  salaryMax           Int?
+  jobType             JobType
+  requirements        String[]
+  benefits            String[]
+  isActive            Boolean   @default(true)
+  applicationDeadline DateTime?
+  viewCount           Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  employerId   Int
+  employer     User          @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  applications Application[]
+  savedBy      SavedJob[]
+}
+
+model Application {
+  id          Int               @id @default(autoincrement())
+  coverLetter String?
+  status      ApplicationStatus @default(PENDING)
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  notes       String?           // Internal notes from employer
+
+  // Relations
+  candidateId Int
+  candidate   User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId       Int
+  job         Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, jobId])
+}
+
+model SavedJob {
+  id      Int      @id @default(autoincrement())
+  savedAt DateTime @default(now())
+
+  // Relations
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId  Int
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+}
